@@ -59,9 +59,8 @@ class GHuntCreds(SmartObj):
             except Exception:
                 if not silent:
                     print("[-] Stored cookies are corrupted\n")
-        else:
-            if not silent:
-                print("[-] No stored cookies found\n")
+        elif not silent:
+            print("[-] No stored cookies found\n")
 
     def save_creds(self, silent=False):
         """Save cookies, OSIDs and tokens to the specified file."""

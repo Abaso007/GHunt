@@ -34,16 +34,16 @@ async def hunt(as_client: httpx.AsyncClient, gaia_id: str, json_file: bool=None)
 
     containers = target.sourceIds
 
-    if len(containers) > 1 or not "PROFILE" in containers:
+    if len(containers) > 1 or "PROFILE" not in containers:
         print("\n[!] You have this person in these containers :")
         for container in containers:
             print(f"- {container.title()}")
 
-    if not "PROFILE" in containers:
+    if "PROFILE" not in containers:
         exit("[-] Given information does not match a public Google Account.")
 
     container = "PROFILE"
-    
+
     gb.rc.print("\n🙋 Google Account data\n", style="plum2")
 
     if container in target.names:
@@ -55,7 +55,7 @@ async def hunt(as_client: httpx.AsyncClient, gaia_id: str, json_file: bool=None)
         else:
             print("[+] Custom profile picture !")
             print(f"=> {target.profilePhotos[container].url}")
-            
+
             await ia.detect_face(vision_api, as_client, target.profilePhotos[container].url)
             print()
 
@@ -90,7 +90,7 @@ async def hunt(as_client: httpx.AsyncClient, gaia_id: str, json_file: bool=None)
 
     print(f"Entreprise User : {target.extendedData.gplusData.isEntrepriseUser}")
     #print(f"Content Restriction : {target.extendedData.gplusData.contentRestriction}")
-    
+
     if container in target.inAppReachability:
         print("\n[+] Activated Google services :")
         for app in target.inAppReachability[container].apps:
@@ -115,8 +115,7 @@ async def hunt(as_client: httpx.AsyncClient, gaia_id: str, json_file: bool=None)
             json_results[f"{container}_CONTAINER"] = {
                 "profile": target
             }
-    
-    if json_file:
+
         import json
         from ghunt.objects.encoders import GHuntEncoder;
         with open(json_file, "w", encoding="utf-8") as f:

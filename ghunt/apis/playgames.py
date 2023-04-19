@@ -51,7 +51,7 @@ class PlayGames(GAPI):
         # Parsing
         data = json.loads(req.text)
         player_profile = PlayerProfile()
-        if not "displayPlayer" in data:
+        if "displayPlayer" not in data:
             return False, player_profile
 
         player_profile._scrape(data["displayPlayer"])
@@ -66,17 +66,14 @@ class PlayGames(GAPI):
         base_url = f"/games/v1whitelisted/players/{player_id}/applications/played"
         data_type = None # json, data or None
 
-        params = {}
-        if page_token:
-            params = {"pageToken": page_token}
-
+        params = {"pageToken": page_token} if page_token else {}
         self._load_endpoint(endpoint_name)
         req = await self._query(as_client, verb, endpoint_name, base_url, params, None, data_type)
 
         # Parsing
         data = json.loads(req.text)
         played_games = PlayedGames()
-        if not "items" in data:
+        if "items" not in data:
             print(req)
             print(req.text)
             return False, "", played_games
@@ -111,15 +108,12 @@ class PlayGames(GAPI):
         # Parsing
         data = json.loads(req.text)
         achievements = PlayerAchievements()
-        if not "items" in data:
+        if "items" not in data:
             print(req)
             print(req.text)
             return False, "", achievements
-        
-        next_page_token = ""
-        if "nextPageToken" in data:
-            next_page_token = data["nextPageToken"]
 
+        next_page_token = data["nextPageToken"] if "nextPageToken" in data else ""
         achievements._scrape(data)
 
         return True, next_page_token, achievements

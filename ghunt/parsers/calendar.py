@@ -24,8 +24,7 @@ class Calendar(Parser):
         self.id = calendar_data.get("id")
         self.summary = calendar_data.get("summary")
         self.time_zone = calendar_data.get("timeZone")
-        conference_props_data = calendar_data.get("conferenceProperties")
-        if conference_props_data:
+        if conference_props_data := calendar_data.get("conferenceProperties"):
             self.conference_properties._scrape(conference_props_data)
 
 class CalendarReminder(Parser):

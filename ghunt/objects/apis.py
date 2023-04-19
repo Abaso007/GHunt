@@ -33,7 +33,9 @@ class GAPI(SmartObj):
 
     def _load_api(self, creds: GHuntCreds, headers: Dict[str, str]):
         if not creds.are_creds_loaded():
-            raise GHuntInsufficientCreds(f"This API requires a loaded GHuntCreds object, but it is not.")
+            raise GHuntInsufficientCreds(
+                "This API requires a loaded GHuntCreds object, but it is not."
+            )
 
         if not is_headers_syntax_good(headers):
             raise GHuntCorruptedHeadersError(f"The provided headers when loading the endpoint seems corrupted, please check it : {headers}")
@@ -44,7 +46,9 @@ class GAPI(SmartObj):
         cookies = {}
         if self.authentication_mode in ["sapisidhash", "cookies_only"]:
             if not (cookies := creds.cookies):
-                raise GHuntInsufficientCreds(f"This endpoint requires the cookies in the GHuntCreds object, but they aren't loaded.")
+                raise GHuntInsufficientCreds(
+                    "This endpoint requires the cookies in the GHuntCreds object, but they aren't loaded."
+                )
 
         if (key_name := self.require_key):
             if not (api_key := get_api_key(key_name)):
@@ -54,10 +58,13 @@ class GAPI(SmartObj):
             headers = {**headers, "X-Goog-Api-Key": api_key, **headers, "Origin": self.key_origin, "Referer": self.key_origin}
 
         if self.authentication_mode == "sapisidhash":
-            if not (sapisidhash := creds.cookies.get("SAPISID")):
-                raise GHuntInsufficientCreds(f"This endpoint requires the SAPISID cookie in the GHuntCreds object, but it isn't loaded.")
+            if sapisidhash := creds.cookies.get("SAPISID"):
+                headers = {**headers, "Authorization": f"SAPISIDHASH {gen_sapisidhash(sapisidhash, self.key_origin)}"}
 
-            headers = {**headers, "Authorization": f"SAPISIDHASH {gen_sapisidhash(sapisidhash, self.key_origin)}"}
+            else:
+                raise GHuntInsufficientCreds(
+                    "This endpoint requires the SAPISID cookie in the GHuntCreds object, but it isn't loaded."
+                )
 
         self.creds = creds
         self.headers = headers
@@ -89,7 +96,9 @@ class GAPI(SmartObj):
                 expiry_date = datetime.utcfromtimestamp(creds.android.authorization_tokens[self.api_name]["expiry"]).replace(tzinfo=timezone.utc)
 
             # If there are no registered authorization token for the current API, or if the token has expired
-            if (not self.api_name in creds.android.authorization_tokens) or (present and datetime.now(timezone.utc) > expiry_date):
+            if self.api_name not in creds.android.authorization_tokens or (
+                present and datetime.now(timezone.utc) > expiry_date
+            ):
                 token, _, expiry_timestamp = await android_oauth_app(as_client, creds.android.master_token, self.package_name, self.scopes)
                 creds.android.authorization_tokens[self.api_name] = {
                     "token": token,
@@ -139,8 +148,9 @@ class Parser(SmartObj):
                         merged_obj = recursive_merge(attr_value, target_obj.__dict__[attr_name], module_name)
                         target_obj.__dict__[attr_name] = merged_obj
 
-                    elif not attr_name in target_obj.__dict__ or \
-                        (attr_value and not target_obj.__dict__.get(attr_name)):
+                    elif attr_name not in target_obj.__dict__ or (
+                        attr_value and not target_obj.__dict__.get(attr_name)
+                    ):
                         target_obj.__dict__[attr_name] = attr_value
             return obj1
 

@@ -41,9 +41,7 @@ def out(calendar: Calendar, events: CalendarEvents, email_address: str, display_
         print(f"[+] Calendar Summary : {calendar.summary}")
     print(f"Calendar Timezone : {calendar.time_zone}\n")
 
-    ### Events
-    target_events = events.items[-limit:]
-    if target_events:
+    if target_events := events.items[-limit:]:
         print(f"[+] {len(events.items)} event{'s' if len(events.items) > 1 else ''} dumped ! Showing the last {len(target_events)} one{'s' if len(target_events) > 1 else ''}...\n")
 
         table = BeautifulTable()
@@ -58,9 +56,7 @@ def out(calendar: Calendar, events: CalendarEvents, email_address: str, display_
             if event.end.date_time and event.start.date_time:
                 duration = relativedelta(event.end.date_time, event.start.date_time)
                 if duration.days or duration.hours or duration.minutes:
-                    duration = (f"{(str(duration.days) + ' day' + ('s' if duration.days > 1 else '')) if duration.days else ''} "
-                        f"{(str(duration.hours) + ' hour' + ('s' if duration.hours > 1 else '')) if duration.hours else ''} "
-                        f"{(str(duration.minutes) + ' minute' + ('s' if duration.minutes > 1 else '')) if duration.minutes else ''}").strip()         
+                    duration = f"{f'{str(duration.days)} day' + ('s' if duration.days > 1 else '') if duration.days else ''} {f'{str(duration.hours)} hour' + ('s' if duration.hours > 1 else '') if duration.hours else ''} {f'{str(duration.minutes)} minute' + ('s' if duration.minutes > 1 else '') if duration.minutes else ''}".strip()         
 
             date = "?"
             if event.start.date_time:

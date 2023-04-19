@@ -52,8 +52,7 @@ class CalendarHttp(GAPI):
 
         return True, calendar
 
-    async def get_events(self, as_client: httpx.AsyncClient, calendar_id: str, params_template="next_events",
-                        time_min=datetime.today().replace(tzinfo=timezone.utc).isoformat(), max_results=250, page_token="") -> Tuple[bool, CalendarEvents]:
+    async def get_events(self, as_client: httpx.AsyncClient, calendar_id: str, params_template="next_events", time_min=datetime.now().replace(tzinfo=timezone.utc).isoformat(), max_results=250, page_token="") -> Tuple[bool, CalendarEvents]:
         endpoint_name = inspect.currentframe().f_code.co_name
 
         verb = "GET"
@@ -97,7 +96,7 @@ class CalendarHttp(GAPI):
         events = CalendarEvents()
         if not data:
             return False, events
-        
+
         events._scrape(data)
 
         return True, events

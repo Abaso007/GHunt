@@ -77,13 +77,13 @@ async def gen_osids(cookies: Dict[str, str], osids: List[str]) -> Dict[str, str]
            sample_cookies[cookie] = req.cookies[cookie]
 
         body = bs(req.text, 'html.parser')
-        
+
         params = {x.attrs["name"]:x.attrs["value"] for x in body.find_all("input", {"type":"hidden"})}
 
         headers = {**gb.config.headers, **{"Content-Type": "application/x-www-form-urlencoded"}}
         req = httpx.post(f"https://{domain}/accounts/SetOSID", cookies=cookies, data=params, headers=headers)
 
-        if not "OSID" in req.cookies:
+        if "OSID" not in req.cookies:
             raise GHuntOSIDAuthError("[-] No OSID header detected, exiting...")
 
         generated_osids[service] = req.cookies["OSID"]
@@ -97,10 +97,7 @@ def check_cookies(cookies: Dict[str, str]) -> bool:
         return False
 
     set_cookies = extract_set_cookies(req)
-    if any([cookie in set_cookies for cookie in cookies]):
-        return False
-
-    return True
+    return all(cookie not in set_cookies for cookie in cookies)
 
 def check_osids(cookies: Dict[str, str], osids: Dict[str, str]) -> bool:
     """Checks the validity of given OSIDs."""
@@ -113,7 +110,7 @@ def check_osids(cookies: Dict[str, str], osids: Dict[str, str]) -> bool:
 
         body = bs(req.text, 'html.parser')
         params = [x.attrs["name"] for x in body.find_all("input", {"type":"hidden"})]
-        if not all([param in wanted for param in params]):
+        if any(param not in wanted for param in params):
             return False
 
     return True
@@ -126,7 +123,7 @@ async def check_master_token(as_client: httpx.AsyncClient, master_token: str) ->
         return False
     return True
 
-async def getting_cookies_dialog(cookies: Dict[str, str]) -> Tuple[Dict[str, str], str] :
+async def getting_cookies_dialog(cookies: Dict[str, str]) -> Tuple[Dict[str, str], str]:
     """
         Launch the dialog that asks the user
         how he want to generate its credentials.
@@ -151,7 +148,7 @@ async def getting_cookies_dialog(cookies: Dict[str, str]) -> Tuple[Dict[str, str
     elif choice == "3":
         for name in cookies.keys():
             cookies[name] = input(f"{name} => ").strip().strip('"')
-        oauth_token = input(f"oauth_token").strip().strip('"')
+        oauth_token = input("oauth_token").strip().strip('"')
 
     else:
         exit("Please choose a valid choice. Exiting...")
