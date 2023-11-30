@@ -163,10 +163,10 @@ class Person(Parser):
                 self.coverPhotos[cover_photo_data["metadata"]["container"]] = person_cover_photo
 
         if (apps_data := person_data.get("inAppReachability")):
-            containers_names = set()
-            for app_data in person_data["inAppReachability"]:
-                containers_names.add(app_data["metadata"]["container"])
-
+            containers_names = {
+                app_data["metadata"]["container"]
+                for app_data in person_data["inAppReachability"]
+            }
             for container_name in containers_names:
                 person_app_reachability = PersonInAppReachability()
                 person_app_reachability._scrape(apps_data, container_name)

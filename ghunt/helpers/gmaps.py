@@ -22,11 +22,10 @@ def get_datetime(datepublished: str):
     """
     if datepublished.split()[0] in ["a", "an"]:
         nb = 1
+    elif datepublished.startswith("last"):
+        nb = int(datepublished.split()[1])
     else:
-        if datepublished.startswith("last"):
-            nb = int(datepublished.split()[1])
-        else:
-            nb = int(datepublished.split()[0])
+        nb = int(datepublished.split()[0])
 
     if "minute" in datepublished:
         delta = relativedelta(minutes=nb)
@@ -43,7 +42,7 @@ def get_datetime(datepublished: str):
     else:
         delta = relativedelta()
 
-    return (datetime.today() - delta).replace(microsecond=0, second=0)
+    return (datetime.now() - delta).replace(microsecond=0, second=0)
 
 async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, Dict[str, int], List[MapsReview], List[MapsPhoto]]:
     """Extracts the target's statistics, reviews and photos."""
@@ -73,11 +72,45 @@ async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, 
                 data = json.loads(req.text[5:])
 
                 new_reviews = []
-                new_photos = []
                 next_page_token = ""
 
                 # Reviews
-                if category == "reviews":
+                if category == "photos":
+                    if not data[22]:
+                        return "private", stats, [], []
+                    photos_data = data[22][1]
+                    if not photos_data:
+                        break
+                    new_photos = []
+                    for photo_data in photos_data:
+                        photos = MapsPhoto()
+                        photos.id = photo_data[0][10]
+                        photos.url = photo_data[0][6][0].split("=")[0]
+                        date = photo_data[0][21][6][8]
+                        photos.exact_date = datetime(date[0], date[1], date[2], date[3]) # UTC
+                        photos.approximative_date = get_datetime(date[8][0]) # UTC
+
+                        if len(photo_data) > 1:
+                            photos.location.id = photo_data[1][14][0]
+                            photos.location.name = photo_data[1][2]
+                            photos.location.address = photo_data[1][3]
+                            photos.location.tags = photo_data[1][4] if photo_data[1][4] else []
+                            photos.location.types = [x for x in photo_data[1][8] if x] if photo_data[1][8] else []
+                            if photo_data[1][0]:
+                                photos.location.position.latitude = photo_data[1][0][2]
+                                photos.location.position.longitude = photo_data[1][0][3]
+                            if len(photo_data[1]) > 31 and photo_data[1][31]:
+                                photos.location.cost = len(photo_data[1][31])
+                        new_photos.append(photos)
+                        bar()
+
+                    agg_photos += new_photos
+
+                    if not new_photos or len(data[22]) < 4 or not data[22][3]:
+                        break
+                    next_page_token = data[22][3].strip("=")
+
+                elif category == "reviews":
                     if not data[24]:
                         return "private", stats, [], []
                     reviews_data = data[24][0]
@@ -119,41 +152,6 @@ async def get_reviews(as_client: httpx.AsyncClient, gaia_id: str) -> Tuple[str, 
                         break
                     next_page_token = data[24][3].strip("=")
 
-                # Photos
-                elif category == "photos" :
-                    if not data[22]:
-                        return "private", stats, [], []
-                    photos_data = data[22][1]
-                    if not photos_data:
-                        break
-                    for photo_data in photos_data:
-                        photos = MapsPhoto()
-                        photos.id = photo_data[0][10]
-                        photos.url = photo_data[0][6][0].split("=")[0]
-                        date = photo_data[0][21][6][8]
-                        photos.exact_date = datetime(date[0], date[1], date[2], date[3]) # UTC
-                        photos.approximative_date = get_datetime(date[8][0]) # UTC
-
-                        if len(photo_data) > 1:
-                            photos.location.id = photo_data[1][14][0]
-                            photos.location.name = photo_data[1][2]
-                            photos.location.address = photo_data[1][3]
-                            photos.location.tags = photo_data[1][4] if photo_data[1][4] else []
-                            photos.location.types = [x for x in photo_data[1][8] if x] if photo_data[1][8] else []
-                            if photo_data[1][0]:
-                                photos.location.position.latitude = photo_data[1][0][2]
-                                photos.location.position.longitude = photo_data[1][0][3]
-                            if len(photo_data[1]) > 31 and photo_data[1][31]:
-                                photos.location.cost = len(photo_data[1][31])
-                        new_photos.append(photos)
-                        bar()
-
-                    agg_photos += new_photos
-
-                    if not new_photos or len(data[22]) < 4 or not data[22][3]:
-                        break
-                    next_page_token = data[22][3].strip("=")
-
     return "", stats, agg_reviews, agg_photos
 
 def avg_location(locs: Tuple[float, float]):
@@ -193,7 +191,6 @@ def sanitize_location(location: Dict[str, str]):
     not_country = False
     not_town = False
     town = "?"
-    country = "?"
     if "city" in location:
         town = location["city"]
     elif "village" in location:
@@ -204,8 +201,9 @@ def sanitize_location(location: Dict[str, str]):
         town = location["municipality"]
     else:
         not_town = True
-    if not "country" in location:
+    if "country" not in location:
         not_country = True
+        country = "?"
         location["country"] = country
     if not_country and not_town:
         return False

@@ -68,10 +68,12 @@ def output(player: Player):
                 app_ids_count[app_id] += 1
             app_ids_count = dict(sorted(app_ids_count.items(), key=lambda item: item[1], reverse=True))
             achiv_nb = list(app_ids_count.values())[0]
-            target_game = None
-            for game in player.played_games:
-                if game.game_data.id == list(app_ids_count.keys())[0]:
-                    target_game = game
-                    break
-
+            target_game = next(
+                (
+                    game
+                    for game in player.played_games
+                    if game.game_data.id == list(app_ids_count.keys())[0]
+                ),
+                None,
+            )
             print(f"[+] Game with the most achievements : {target_game.game_data.name} ({achiv_nb})")

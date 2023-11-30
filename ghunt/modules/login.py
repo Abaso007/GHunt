@@ -43,8 +43,9 @@ async def check_and_login(as_client: httpx.AsyncClient, clean: bool=False) -> No
         are_cookies_valid = check_cookies(ghunt_creds.cookies)
         if are_cookies_valid:
             print("\n[+] The cookies seems valid !")
-            are_osids_valid = check_osids(ghunt_creds.cookies, ghunt_creds.osids)
-            if are_osids_valid:
+            if are_osids_valid := check_osids(
+                ghunt_creds.cookies, ghunt_creds.osids
+            ):
                 print("[+] The OSIDs seems valid !")
             else:
                 print("[-] Seems like the OSIDs are invalid.")
@@ -64,12 +65,11 @@ async def check_and_login(as_client: httpx.AsyncClient, clean: bool=False) -> No
 
     # Validate cookies
     if new_cookies_entered or not ghunt_creds.are_creds_loaded():
-        are_cookies_valid = check_cookies(cookies)
-        if are_cookies_valid:
+        if are_cookies_valid := check_cookies(cookies):
             print("\n[+] The cookies seems valid !")
         else:
             await exit("\n[-] Seems like the cookies are invalid, try regenerating them.")
-    
+
     if not new_cookies_entered:
         await exit()
 

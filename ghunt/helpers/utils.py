@@ -84,10 +84,7 @@ def ppnb(nb: float|int) -> float:
     try:
         return int(nb) if nb % int(nb) == 0.0 else nb
     except ZeroDivisionError:
-        if nb == 0.0:
-            return 0
-        else:
-            return nb
+        return 0 if nb == 0.0 else nb
 
 def parse_oauth_flow_response(body: str):
     """

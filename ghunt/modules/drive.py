@@ -53,7 +53,7 @@ async def hunt(as_client: httpx.AsyncClient, file_id: str, json_file: bool=None)
     #gb.rc.print(f"[+] {'Folder' if is_folder else 'File'} found !", style="sea_green3")
 
     gb.rc.print("\n🗃️ Drive properties\n", style="deep_pink4")
-        
+
     print(f"Title : {file.title}")
     print(f"{'Folder' if is_folder else 'File'} ID : {file.id}")
     if file.md5_checksum:
@@ -91,7 +91,9 @@ async def hunt(as_client: httpx.AsyncClient, file_id: str, json_file: bool=None)
             if brand.home_page_url:
                 print(f"Home page : {brand.home_page_url}")
             else:
-                gb.rc.print(f"Home page : [italic][bright_black]Not found.[/italic][/bright_black]")
+                gb.rc.print(
+                    "Home page : [italic][bright_black]Not found.[/italic][/bright_black]"
+                )
         else:
             gb.rc.print("Not found.", style="italic")
     else:
@@ -117,7 +119,7 @@ async def hunt(as_client: httpx.AsyncClient, file_id: str, json_file: bool=None)
     #print("\n[Parents]")
     gb.rc.print("\n📂 Parents\n", style="gold3")
     if file.parents:
-        print(f"[+] Parents folders :")
+        print("[+] Parents folders :")
         for parent in file.parents:
             print(f"- 📁 {parent.id}{' [Root folder]' if parent.is_root else ''}")
     else:
@@ -182,16 +184,15 @@ async def hunt(as_client: httpx.AsyncClient, file_id: str, json_file: bool=None)
         if capabilities == drive_knownledge.default_folder_capabilities:
             print("[-] You don't have special permissions against this folder.")
         else:
-            print(f"[+] You have special permissions against this folder ! ✨")
+            print("[+] You have special permissions against this folder ! ✨")
             for cap in capabilities:
                 print(f"- {inflection.humanize(cap)}")
+    elif capabilities == drive_knownledge.default_file_capabilities:
+        print("[-] You don't have special permissions against this file.")
     else:
-        if capabilities == drive_knownledge.default_file_capabilities:
-            print("[-] You don't have special permissions against this file.")
-        else:
-            print(f"[+] You have special permissions against this file ! ✨")
-            for cap in capabilities:
-                print(f"- {inflection.humanize(cap)}")
+        print("[+] You have special permissions against this file ! ✨")
+        for cap in capabilities:
+            print(f"- {inflection.humanize(cap)}")
 
     if json_file:
         json_results = {
